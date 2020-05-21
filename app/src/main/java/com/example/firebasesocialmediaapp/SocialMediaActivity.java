@@ -28,6 +28,10 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.UploadTask;
 
@@ -57,6 +61,10 @@ public class SocialMediaActivity extends AppCompatActivity {
         btnCreatePost=findViewById(R.id.btnCreatePost);
         edtDes=findViewById(R.id.edtDes);
         usersListView=findViewById(R.id.usersListView);
+        usernames=new ArrayList<>();
+        adapter=new ArrayAdapter(this, android.R.layout.simple_list_item_1,usernames); //contains the list view layout
+        usersListView.setAdapter(adapter); //showing the list
+
 
         postImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -179,6 +187,37 @@ public class SocialMediaActivity extends AppCompatActivity {
                     // ...
                     Toast.makeText(getApplicationContext(), "UPLOAD SUCCESSFUL", Toast.LENGTH_SHORT).show();
                     edtDes.setVisibility(View.VISIBLE);
+
+                    FirebaseDatabase.getInstance().getReference().child("my_users").addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                            String username=(String) dataSnapshot.child("userName").getValue();
+                            usernames.add(username);
+                            adapter.notifyDataSetChanged();
+
+                        }
+
+                        @Override
+                        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                        }
+
+                        @Override
+                        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
                 }
             });
         }

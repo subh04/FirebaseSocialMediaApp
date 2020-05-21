@@ -29,7 +29,7 @@
         android:id="@+id/btnCreatePost"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="create an image post" />
+        android:text="upload image" />
 
     <EditText
         android:id="@+id/edtDes"
