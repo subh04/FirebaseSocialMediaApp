@@ -16,6 +16,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -83,6 +84,11 @@ public class MainActivity extends AppCompatActivity {
                 if(task.isSuccessful()){
 
                     Toast.makeText(getApplicationContext(),"SignUp successful",Toast.LENGTH_SHORT).show();
+                    FirebaseDatabase.getInstance().getReference()
+                            .child("my_users")
+                            .child(task.getResult().getUser().getUid())
+                            .child("userName").setValue(txtUN.getText().toString());
+                    //gets the user name into the firebase database my_users->uid->username value(txtUN)
                     transitionToSocialMediaActivity();
 
                 }else{
