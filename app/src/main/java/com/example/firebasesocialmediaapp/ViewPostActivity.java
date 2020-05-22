@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -17,11 +19,12 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-public class ViewPostActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+public class ViewPostActivity extends AppCompatActivity implements AdapterView.OnItemClickListener,AdapterView.OnItemLongClickListener {
 
     private ListView postsListView;
     private ArrayList<String> postsFromUsers;
@@ -45,6 +48,7 @@ public class ViewPostActivity extends AppCompatActivity implements AdapterView.O
         adapter=new ArrayAdapter(this,android.R.layout.simple_list_item_1,postsFromUsers);
         postsListView.setAdapter(adapter);
         postsListView.setOnItemClickListener(this);
+        postsListView.setOnItemLongClickListener(this);
         FirebaseDatabase.getInstance().getReference().child("my_users").child(firebaseAuth.getCurrentUser().getUid()).child("recieved_posts").addChildEventListener(new ChildEventListener() {
 
             @Override
@@ -65,6 +69,19 @@ public class ViewPostActivity extends AppCompatActivity implements AdapterView.O
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                int i=0;
+                for(DataSnapshot snapshot:dataSnapshots){
+                    if(snapshot.getKey().equals(dataSnapshot.getKey())){
+                        dataSnapshots.remove(i);
+                        postsFromUsers.remove(i);
+
+                    }
+                    i++;
+                }
+                adapter.notifyDataSetChanged();
+                sentPostImage.setImageResource(R.drawable.phnew);
+                txtDescription.setText("");
 
             }
 
@@ -89,5 +106,45 @@ public class ViewPostActivity extends AppCompatActivity implements AdapterView.O
         Picasso.get().load(downloadLink).into(sentPostImage);
         txtDescription.setText((String)myDataSnapShots.child("des").getValue());
 
+    }
+
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+
+        new AlertDialog.Builder(this)
+                .setTitle("Delete entry")
+                .setMessage("Are you sure you want to delete this entry?")
+
+                // Specifying a listener allows you to take an action before dismissing the dialog.
+                // The dialog is automatically dismissed when a dialog button is clicked.
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Continue with delete operation
+
+                        FirebaseStorage.getInstance().getReference()
+                                .child("my_images")
+                                .child((String)dataSnapshots.get(position)
+                                        .child("imageIdentifier").getValue()).delete();
+
+                        FirebaseDatabase.getInstance().getReference()
+                                .child("my_users").child(firebaseAuth.getCurrentUser().getUid())
+                                .child("recieved_posts")
+                                .child(dataSnapshots.get(position).getKey()).removeValue();
+
+
+                    }
+                })
+
+                // A null listener allows the button to dismiss the dialog and take no further action.
+                .setNegativeButton(android.R.string.no, null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+
+
+
+
+
+        return false;
     }
 }
