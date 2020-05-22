@@ -4,6 +4,9 @@
     <item android:id="@+id/logOut"
         android:title="LogOut"
         app:showAsAction="always"/>
+    <item android:id="@+id/viewPosts"
+        android:title="View Posts"
+        app:showAsAction="always"/>
 
 
 </menu>
