@@ -258,7 +258,7 @@ public class SocialMediaActivity extends AppCompatActivity implements AdapterVie
         dataMap.put("imageIdentifier",imageIdentifier);
         dataMap.put("imageLink",imageDownloadLink);
         dataMap.put("des",edtDes.getText().toString());
-        FirebaseDatabase.getInstance().getReference().child("my_users").child(uids.get(position)).child("received_posts").push().setValue(dataMap).addOnCompleteListener(new OnCompleteListener<Void>() {
+        FirebaseDatabase.getInstance().getReference().child("my_users").child(uids.get(position)).child("recieved_posts").push().setValue(dataMap).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if(task.isSuccessful()){
