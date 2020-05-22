@@ -18,6 +18,7 @@ import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,8 +26,10 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -37,9 +40,11 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 
-public class SocialMediaActivity extends AppCompatActivity {
+
+public class SocialMediaActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
     private FirebaseAuth mAuth;
     private ImageView postImageView;
@@ -50,6 +55,8 @@ public class SocialMediaActivity extends AppCompatActivity {
     private String imageIdentifier;
     private ArrayList<String> usernames;
     private ArrayAdapter adapter;
+    private ArrayList<String> uids;
+    private String imageDownloadLink;
 
 
     @Override
@@ -61,9 +68,12 @@ public class SocialMediaActivity extends AppCompatActivity {
         btnCreatePost=findViewById(R.id.btnCreatePost);
         edtDes=findViewById(R.id.edtDes);
         usersListView=findViewById(R.id.usersListView);
+        usersListView.setOnItemClickListener(this);
         usernames=new ArrayList<>();
+        uids=new ArrayList<>();
         adapter=new ArrayAdapter(this, android.R.layout.simple_list_item_1,usernames); //contains the list view layout
         usersListView.setAdapter(adapter); //showing the list
+
 
 
         postImageView.setOnClickListener(new View.OnClickListener() {
@@ -192,6 +202,8 @@ public class SocialMediaActivity extends AppCompatActivity {
                         @Override
                         public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
+                            uids.add(dataSnapshot.getKey());
+
                             String username=(String) dataSnapshot.child("userName").getValue();
                             usernames.add(username);
                             adapter.notifyDataSetChanged();
@@ -218,8 +230,35 @@ public class SocialMediaActivity extends AppCompatActivity {
 
                         }
                     });
+
+                    taskSnapshot.getMetadata().getReference().getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {   //onCompleteListener cz download url is a heavy task and it needs to occur in the background
+                        @Override
+                        public void onComplete(@NonNull Task<Uri> task) {
+
+                            if(task.isSuccessful()){
+                                imageDownloadLink=task.getResult().toString();
+                            }
+
+                        }
+                    });
                 }
             });
         }
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+        HashMap<String,String> dataMap=new HashMap<>(); //HashMap<key,values>
+        dataMap.put("fromWhom",FirebaseAuth.getInstance().getCurrentUser().getDisplayName()); //when we signUp the user we get the user name
+        dataMap.put("imageIdentifier",imageIdentifier);
+        dataMap.put("imageLink",imageDownloadLink);
+        dataMap.put("des",edtDes.getText().toString());
+        FirebaseDatabase.getInstance().getReference().child("my_users").child(uids.get(position)).child("recieved_posts").push().setValue(dataMap);
+
+
+
+
+
     }
 }
